@@ -10,13 +10,13 @@ inputs:
   REPORT_API_ENDPOINT:
     description: 'Endpoint for sending final reports'
     required: true
-  REPORT_API_TOKEN:
+  APICURON_TOKEN:
     description: 'Authentication token for report API'
     required: false
-  USER_INFO_SERVICE_ENDPOINT:
+  ORCID_LOOKUP_SERVICE_ENDPOINT:
     description: 'Endpoint for user information lookup'
     required: true
-  USER_INFO_SERVICE_TOKEN:
+  ORCID_LOOKUP_SERVICE_TOKEN:
     description: 'Authentication token for user info service'
     required: false
   RESOURCE_ID:
