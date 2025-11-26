@@ -1,16 +1,20 @@
 // ...existing code...
 
 import { Logger } from '../logger.js'
-import { ReportApiConfig } from '../types/api-config.js'
+import { ApicuronConfig } from '../types/input.types.js'
 import { Report } from '../types/report.schema.js'
 
 export class APICURONClient {
   private endpoint: string
   private token: string
 
-  constructor(config: ReportApiConfig) {
-    this.endpoint = config.endpoint
-    this.token = config.token
+  constructor(config: ApicuronConfig) {
+    const endpoints = {
+      prod: 'https://apicuron.org/api/reports',
+      dev: 'https://dev.apicuron.org/api/reports'
+    }
+    this.endpoint = endpoints[config.environment]
+    this.token = config.apicuron_token
   }
 
   async sendReports(reports: Report[]): Promise<void> {

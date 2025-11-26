@@ -2,15 +2,12 @@ import { Report } from '../types/report.schema.js'
 import { ApicuronProcessor } from './processor.interface.js'
 // import * as github from '@actions/github'
 import * as core from '@actions/core'
-import { OrcidProvider } from '../orcid/orcid-provider.type.js'
+import { OrcidProvider } from '../orcid/orcid-providers/orcid-provider.abstract.js'
 import { GithubPayload } from '../types/github.types.js'
 
 type CommitProcessorInput = {
   githubPayload: GithubPayload
   apicuronResourceId: string
-  apicuronActivityName: string
-  apicuronLeague: string
-  resourceUrl?: string
 }
 export class CommitProcessor
   implements ApicuronProcessor<CommitProcessorInput>
@@ -21,10 +18,7 @@ export class CommitProcessor
   }
   async process({
     githubPayload,
-    apicuronResourceId,
-    apicuronActivityName,
-    apicuronLeague,
-    resourceUrl
+    apicuronResourceId
   }: CommitProcessorInput): Promise<Report[]> {
     // Implement the conversion logic from commit to report
     core.info(`Processing payload: ${JSON.stringify(githubPayload, null, 2)}`)
@@ -47,9 +41,7 @@ export class CommitProcessor
           core.info(`Skipping report for ${username} - no ORCID available`)
           return null
         }
-        const resUrl = resourceUrl
-          ? `${resourceUrl}/${repo.html_url}`
-          : `${repo.html_url}`
+        const resUrl = `${repo.html_url}`
 
         const commitTime = commit.timestamp
           ? new Date(commit.timestamp)
@@ -59,8 +51,8 @@ export class CommitProcessor
           curator_orcid: orcid,
           entity_uri: `${resUrl}/commit/${commit.id}`,
           resource_id: apicuronResourceId,
-          activity_term: apicuronActivityName,
-          league: apicuronLeague,
+          activity_term: 'coding_activity',
+          league: 'default',
           timestamp
         }
       })

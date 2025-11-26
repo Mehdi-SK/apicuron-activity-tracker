@@ -1,61 +1,45 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import { APICURONClient } from './apicuron-client/apicuron-client.js'
+import { RemoteHandler } from './orcid/orcid-providers/remote-api.handler.js'
 import { CommitProcessor } from './processors/commit.processor.js'
-import { UserOrcidApiConfig } from './types/api-config.js'
-import { RemoteApiProvider } from './orcid/orcid-providers/remote-api.provider.js'
-import { deriveResourceId } from './utils/utils.js'
-interface ReportApiConfig {
-  endpoint: string
-  token: string
-}
+
+import { ExecutionMode } from './types/input.types.js'
+import { Report } from './types/report.schema.js'
+import { loadActionInputs } from './utils/loadActionInputs.js'
 
 export async function run(): Promise<void> {
   try {
-    const userInfoConfig: UserOrcidApiConfig = {
-      endpoint: core.getInput('USER_INFO_SERVICE_ENDPOINT', { required: true }),
-      token: core.getInput('USER_INFO_SERVICE_TOKEN')
-    }
-    const apicuronEndpointConfig: ReportApiConfig = {
-      endpoint: core.getInput('REPORT_API_ENDPOINT', { required: true }),
-      token: core.getInput('REPORT_API_TOKEN')
-    }
-    const apicuronResourceId: string = deriveResourceId(
-      core.getInput('RESOURCE_ID'),
-      github.context.repo
-    )
-    const apicuronActivityName = core.getInput('ACTIVITY_NAME', {
-      required: true
-    })
-    const apicuronLeague = core.getInput('LEAGUE') || 'default'
-    const resourceUrl = core.getInput('RESOURCE_URL')
+    const inputs = loadActionInputs()
 
-    const orcidProvider = new RemoteApiProvider(userInfoConfig)
-    const commitProcessor = new CommitProcessor(orcidProvider)
+    // setup orcid provider service
+    const orcidProvider = new RemoteHandler(inputs.orcid_lookup_service)
 
+    // setup processor
     const githubPayload = github.context.payload
-
-    const reports = await commitProcessor.process({
-      githubPayload,
-      apicuronResourceId,
-      apicuronActivityName,
-      apicuronLeague,
-      resourceUrl
-    })
+    let reports: Array<Report> = []
+    if (inputs.mode === ExecutionMode.commits) {
+      const commitProcessor = new CommitProcessor(orcidProvider)
+      reports = await commitProcessor.process({
+        githubPayload,
+        apicuronResourceId: inputs.apicuron.resource_id
+      })
+    } else if (inputs.mode === ExecutionMode.ett) {
+      throw new Error('ETT mode not implemented yet')
+    }
 
     if (reports.length === 0) {
       core.info('No valid commits to process')
       return
     }
     core.info(`Generated ${reports.length} reports`)
-    core.info(`sending reports to API: ${apicuronEndpointConfig.endpoint}`)
+    core.info(`sending reports to APICURON: ${inputs.apicuron.environment}`)
     console.log(JSON.stringify(reports, null, 2))
 
-    const apicuronClient = new APICURONClient(apicuronEndpointConfig)
+    const apicuronClient = new APICURONClient(inputs.apicuron)
     await apicuronClient.sendReports(reports)
     core.setOutput('reports sent:', JSON.stringify(reports))
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
   }
 }
-
