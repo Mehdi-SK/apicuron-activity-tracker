@@ -19,7 +19,7 @@ jobs:
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Execution mode, 'per-commit' for commit based reporting, 'ett' for ELIXIR Toolkit Theme resources
-          MODE: per-commit
+          MODE: ETT
 
           # Dictates which to Apicuron instance send the reports, set to 'dev' for testing instance, 'prod' for production
           APICURON_ENVIRONMENT: dev

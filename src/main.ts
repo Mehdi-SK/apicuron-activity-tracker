@@ -4,6 +4,7 @@ import { APICURONClient } from './apicuron-client/apicuron-client.js'
 import { RemoteHandler } from './orcid/orcid-providers/remote-api.handler.js'
 
 import { CommitProcessor } from './processors/commit/commit.processor.js'
+import { DocRepositoryProcessor } from './processors/docrepository/docrepository.processor.js'
 import { ExecutionMode } from './types/input.types.js'
 import { Report } from './types/report.schema.js'
 import { loadActionInputs } from './utils/loadActionInputs.js'
@@ -25,7 +26,10 @@ export async function run(): Promise<void> {
         apicuronResourceId: inputs.apicuron.resource_id
       })
     } else if (inputs.mode === ExecutionMode.ett) {
-      throw new Error('ETT mode not implemented yet')
+      const ettProcessor = new DocRepositoryProcessor()
+      reports = await ettProcessor.process({
+        githubPayload
+      })
     }
 
     if (reports.length === 0) {

@@ -2,12 +2,24 @@
   "repository": {
     "html_url": "https://github.com/example/repo"
   },
+  "forced": false,
   "commits": [
     {
       "id": "abc123def456",
+      "tree_id": "tree789ghi012",
+      "url": "https://github.com/Mehdi-SK/apicuron-activity-tracker/commit/e11779a01d90e743493988a1091a1013fc7979ed",
       "author": {
-        "username": "Mehdi-SK"
-      }
+        "username": "Mehdi-SK",
+        "email": "mehdi@example.com"
+      },
+      "committer": {
+        "username": "Mehdi-SK",
+        "email": "mehdi@example.com"
+      },
+      "message": "fix: added text files 1 and 2",
+      "timestamp": "2024-06-15T12:34:56Z",
+      "added": ["file1.txt", "file2.txt"],
+      "distinct": true
     }
   ]
 }
