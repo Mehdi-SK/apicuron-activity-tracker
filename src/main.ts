@@ -18,6 +18,13 @@ export async function run(): Promise<void> {
 
     // setup processor
     const githubPayload = github.context.payload
+
+    if(!githubPayload.commits || githubPayload.commits.length === 0) {
+      core.info('No commits found in the GitHub payload. Exiting.')
+      return
+    }
+
+
     let reports: Array<Report> = []
     if (inputs.mode === ExecutionMode.commits) {
       const commitProcessor = new CommitProcessor(orcidProvider)
