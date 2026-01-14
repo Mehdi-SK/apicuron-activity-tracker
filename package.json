@@ -33,7 +33,9 @@
     "package": "npx rollup --config rollup.config.ts --configPlugin @rollup/plugin-typescript",
     "package:watch": "npm run package -- --watch",
     "test": "NODE_OPTIONS=--experimental-vm-modules NODE_NO_WARNINGS=1 npx jest",
-    "all": "npm run format:write && npm run lint && npm run test && npm run coverage && npm run package"
+    "all": "npm run format:write && npm run lint && npm run test && npm run coverage && npm run package",
+    "act-push": "act push --workflows \".github/workflows/apicuron-reporter.yaml\" --secret-file \"/home/mehdi/projects/apicuron-repo-tracker/local/.secrets\" --var-file \"\" --input-file \"\" --eventpath \"/home/mehdi/projects/apicuron-repo-tracker/local/payload.json\" --use-gitignore=\"false\"",
+    "act-run": "npm run package && npm run act-push"
   },
   "license": "MIT",
   "dependencies": {
