@@ -9,6 +9,7 @@ describe('ArticleParser', () => {
     fileContent = `---
 title: Hello
 slug: home
+contributors: [John Doe, Jane Smith, Johnny Bravo, Mary Alice]
 ---
 Content.`
   })
@@ -17,6 +18,13 @@ Content.`
     const result = articleParser.parse(fileContent)
     console.log(`parsed result: ${JSON.stringify(result)}`)
     expect(result.frontMatter.title).toBe('Hello')
+    expect(result.frontMatter.slug).toBe('home')
+    expect(result.frontMatter.contributors).toEqual([
+      'John Doe',
+      'Jane Smith',
+      'Johnny Bravo',
+      'Mary Alice'
+    ])
     expect(result.content).toBe('Content.') // Corrected to match the actual content
   })
 
@@ -30,11 +38,22 @@ Content.`
   })
 
   it('should let front matter override defaults', () => {
-    const defaults = { title: 'Default Title', author: 'Default Author' }
+    const defaults = {
+      title: 'Default Title',
+      contributors: ['Default Author'],
+      affiliation: 'unipd'
+    }
 
     const result = articleParser.parse(fileContent, defaults)
+    console.log(`parsed result: ${JSON.stringify(result)}`)
 
     expect(result.frontMatter.title).toBe('Hello') // from front matter
-    expect(result.frontMatter.author).toBe('Default Author') // from defaults
+    expect(result.frontMatter.contributors).toEqual([
+      'John Doe',
+      'Jane Smith',
+      'Johnny Bravo',
+      'Mary Alice'
+    ]) // from front matter
+    expect(result.frontMatter.affiliation).toBe('unipd') // from defaults
   })
 })
