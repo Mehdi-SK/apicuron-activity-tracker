@@ -34,19 +34,30 @@ export class DocRepositoryProcessor
   async processAll(input: DocRepositoryProcessorInput): Promise<Report[] | Promise<Report[]>> {
 
     Logger.info(`Starting to process all articles in repository at: ${this.repoRoot}`)
+    const errors: { file: string, error: any }[] = []
+
     for await (const { filePath, defaults } of ArticleIterator({basePath: `${this.repoRoot}`})){
       Logger.info(`Processing file: ${filePath} with defaults: ${JSON.stringify(defaults)}`)
       const rawFileContent = readFileSync(`${this.repoRoot}/${filePath}`, 'utf-8')
-      const {frontMatter: fileFrontMatter, content } = this.articleParser.parse(rawFileContent, defaults)
+      const parsed = this.articleParser.parse(rawFileContent, defaults)
 
-
-      Logger.info(`Parsed front matter: ${JSON.stringify(fileFrontMatter)}`)
-      Logger.info(`Parsed content length: ${content.length} characters`)
-      Logger.info(`--- Finished processing file: ${filePath} ---\n\n`)
+      if (!parsed.success) {
+        errors.push({ file: filePath, error: parsed.error })
+        continue
+      }else{
+        const {frontMatter, content} = parsed.data
+        Logger.info(`Parsed front matter: ${JSON.stringify(frontMatter)}`)
+        Logger.info(`Parsed content length: ${content.length} characters`)  
+      }
       
+      Logger.info(`--- Finished processing file: ${filePath} ---\n\n`)
     }
 
-
+    Logger.warning(`Finished processing all articles with ${errors.length} errors. **These articles were not be credited:**`)
+    errors.forEach(err => {
+      Logger.error(`\tError in file [${err.file}] => ${err.error}`)
+    })
+    Logger.info(`If you wish to credit contributors to these pages, please address the errors and re-run the workflow.`)
 
     return []
   }
