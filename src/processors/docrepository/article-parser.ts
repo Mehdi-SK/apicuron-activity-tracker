@@ -1,5 +1,6 @@
 import matter from 'gray-matter'
 import { DefaultsConfig } from './article-iterator.js'
+import { Logger } from '../../logger.js'
 
 export type ArticleMetadata = {
   frontMatter: Record<string, any>
@@ -14,14 +15,19 @@ export class ArticleParser {
    * Merges Jekyll defaults with the front matter (front matter takes precedence).
    */
   parse(fileContent: string, defaults?: DefaultsConfig): ArticleMetadata {
-    const parsed = matter(fileContent)
+    try {
+      const parsed = matter(fileContent)
 
-    return {
-      frontMatter: {
-        ...defaults,
-        ...parsed.data
-      },
-      content: parsed.content
+      return {
+        frontMatter: {
+          ...defaults,
+          ...parsed.data
+        },
+        content: parsed.content
+      }
+    } catch (error) {
+      Logger.error(`Error parsing article content: ${error}`)
+      throw error
     }
   }
 }

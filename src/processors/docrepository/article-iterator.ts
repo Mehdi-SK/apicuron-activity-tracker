@@ -4,6 +4,7 @@ import * as core from '@actions/core'
 import YAML from 'yaml'
 import { Glob } from 'glob'
 import { minimatch } from 'minimatch'
+import { Logger } from '../../logger.js'
 export type IteratorConfig = {
   basePath: string
 }
@@ -45,7 +46,7 @@ export class JekyllDefaultConfigBuilder {
     }[]
   }
 
-  excludedPaths: string[] = []
+  excludedPaths: string[] = [] // array of files exlcuded
   defaults: Record<ConfigPath, DefaultsConfig> = {}
   globalDefaults: DefaultsConfig = {}
   constructor(yamlString: string) {
@@ -53,12 +54,13 @@ export class JekyllDefaultConfigBuilder {
   }
 
   loadExcludes(): this {
+    Logger.info(`Loading excludes from Jekyll config: ${JSON.stringify(this.data.exclude)}`)
     if (!!this.data.exclude && Array.isArray(this.data.exclude)) {
       this.excludedPaths = this.data.exclude.filter(
         (entry) => typeof entry === 'string'
       )
-      if (this.excludedPaths.length <= this.data.exclude.length) {
-        core.warning('Found non-string values in exclude array on Config')
+      if (this.excludedPaths.length < this.data.exclude.length) {
+        Logger.warning('Found non-string values in exclude array on Config')
       }
     }
     return this
@@ -148,11 +150,13 @@ export async function* ArticleIterator(config: IteratorConfig) {
     )
   } else {
     // If the file is found the yaml is parsed and the config is loaded
+    Logger.info(`Found Jekyll config at path: ${configPath}, loading configuration`)
     const yamlContent = readFileSync(configPath, 'utf-8')
     baseConfigObj = new JekyllDefaultConfigBuilder(yamlContent)
       .loadExcludes()
       .loadDefaults()
       .build()
+    // Logger.info(`Loaded Jekyll config: ${JSON.stringify(baseConfigObj)}`)
   }
 
   const pathIterator = new Glob('./**/*.md', {
@@ -162,7 +166,7 @@ export async function* ArticleIterator(config: IteratorConfig) {
 
   for await (const file of pathIterator) {
     const defaultValue = getFileDefaults(file, baseConfigObj)
-
+    Logger.info(`\nYielding file: ${file}`)
     yield {
       filePath: file,
       defaults: defaultValue
