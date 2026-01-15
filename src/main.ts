@@ -34,7 +34,7 @@ export async function run(): Promise<void> {
       })
     } else if (inputs.mode === ExecutionMode.ett) {
       const ettProcessor = new DocRepositoryProcessor()
-      reports = await ettProcessor.processAll({
+      reports = await ettProcessor.process({
         githubPayload
       })
     }

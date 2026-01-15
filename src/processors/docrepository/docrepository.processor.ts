@@ -25,29 +25,18 @@ export class DocRepositoryProcessor
     return process.env.GITHUB_WORKSPACE ?? process.cwd()
   }
 
-  process(input: DocRepositoryProcessorInput): Report[] | Promise<Report[]> {
-    // Parse through the md files, exclude files that have "search_exclude" set to true
-    // Fllowing structure here: https://jekyllrb.com/docs/structure/ We can skip the known jekyll non-page files
-    const repoRoot = process.env.GITHUB_WORKSPACE ?? process.cwd()
-    Logger.debug(`Checking GitHub workspace path: ${repoRoot}`)
+  async process(input: DocRepositoryProcessorInput): Promise<Report[]> {
+    Logger.info('Building contributors map from contributors file...')
+    await this.contribuotrsFileProvider.build()
+    Logger.info(`Processing all articles in repository at: ${this.repoRoot}`)
 
-    const addedFiles = this.getFilesAddedInCommits(input.githubPayload)
-    Logger.debug(
-      `Found ${addedFiles.length} Files added in commits: ${addedFiles.join(', ')}`
-    )
+    await this.processArticles()
+
     return []
   }
 
-  async processAll(
-    input: DocRepositoryProcessorInput
-  ): Promise<Report[] | Promise<Report[]>> {
-    Logger.info('Building contributors map from contributors file...')
-    await this.contribuotrsFileProvider.build()
-    Logger.info(
-      `Processing all articles in repository at: ${this.repoRoot}`
-    )
-    const errors: { file: string; error: any }[] = []
-
+  private async processArticles() {
+    const errors: { file: string; error: unknown }[] = []
     for await (const { filePath, defaults } of ArticleIterator({
       basePath: `${this.repoRoot}`
     })) {
@@ -82,30 +71,27 @@ export class DocRepositoryProcessor
           Logger.info(
             `Contributors found for file ${filePath}: ${JSON.stringify(frontMatter['contributors'])}`
           )
+          return frontMatter['contributors'] as string[]
         } else {
           Logger.info(
             `No contributors found for file ${filePath}, using defaults: ${JSON.stringify(defaults?.contributors)}`
           )
         }
+        Logger.logProcessingErrors(errors)
       }
     }
-
-    Logger.warning(
-      `Finished processing all articles with ${errors.length} errors: `
-    )
-    errors.forEach((err) => {
-      Logger.error(`\tError in file [${err.file}] => ${err.error}`)
-    })
-    Logger.warning(
-      `If you wish to credit contributors to these pages, please address the errors and re-run the workflow.`
-    )
-
-    return []
   }
 
-  private getFilesAddedInCommits(githubPayload: GithubPayload): string[] {
-    return githubPayload.commits.flatMap((commit: { added: string[] }) => {
-      return commit.added
-    })
+  async buildReportsForArticle(): Promise<Report[] | null> {
+    return [
+      {
+        activity_term: 'get from input',
+        curator_orcid: '',
+        entity_uri: 'article_uri',
+        league: 'get from input',
+        resource_id: 'get from input',
+        timestamp: 'get from commit'
+      }
+    ]
   }
 }
