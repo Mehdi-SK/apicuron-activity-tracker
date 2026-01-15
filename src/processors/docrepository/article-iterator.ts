@@ -21,7 +21,10 @@ export type DefaultsConfigValue =
   | string[]
   | Record<string, string>[]
 
-export type DefaultsConfig = Record<string, DefaultsConfigValue>
+export type DefaultsConfig = {
+  contributors?: string[] | string,
+  [key: string]: DefaultsConfigValue | undefined
+}
 type ConfigPath = string
 
 const defaultExcludedPaths = [

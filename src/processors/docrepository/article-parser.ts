@@ -1,10 +1,11 @@
 import matter from 'gray-matter'
-import { DefaultsConfig } from './article-iterator.js'
 import { Logger } from '../../logger.js'
 import { Result } from '../../types/result.type.js'
+import { DefaultsConfig } from './article-iterator.js'
 
+export type ArticleFrontMatter = DefaultsConfig
 export type ArticleMetadata = {
-  frontMatter: Record<string, any>
+  frontMatter: ArticleFrontMatter
   content: string
 }
 
