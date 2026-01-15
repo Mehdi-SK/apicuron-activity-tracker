@@ -54,7 +54,9 @@ export class JekyllDefaultConfigBuilder {
   }
 
   loadExcludes(): this {
-    Logger.info(`Loading excludes from Jekyll config: ${JSON.stringify(this.data.exclude)}`)
+    Logger.info(
+      `Loading excludes from Jekyll config: ${JSON.stringify(this.data.exclude)}`
+    )
     if (!!this.data.exclude && Array.isArray(this.data.exclude)) {
       this.excludedPaths = this.data.exclude.filter(
         (entry) => typeof entry === 'string'
@@ -150,7 +152,6 @@ export async function* ArticleIterator(config: IteratorConfig) {
     )
   } else {
     // If the file is found the yaml is parsed and the config is loaded
-    Logger.info(`Found Jekyll config at path: ${configPath}, loading configuration`)
     const yamlContent = readFileSync(configPath, 'utf-8')
     baseConfigObj = new JekyllDefaultConfigBuilder(yamlContent)
       .loadExcludes()
@@ -166,7 +167,6 @@ export async function* ArticleIterator(config: IteratorConfig) {
 
   for await (const file of pathIterator) {
     const defaultValue = getFileDefaults(file, baseConfigObj)
-    Logger.info(`\nYielding file: ${file}`)
     yield {
       filePath: file,
       defaults: defaultValue

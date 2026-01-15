@@ -5,6 +5,7 @@ import { Report } from '../../types/report.schema.js'
 import { ApicuronProcessor } from '../processor.interface.js'
 import { ArticleIterator } from './article-iterator.js'
 import { ArticleParser } from './article-parser.js'
+import { ContributorsFileProvider } from '../../orcid/orcid-providers/contributors-file.provider.js'
 
 type DocRepositoryProcessorInput = {
   githubPayload: GithubPayload
@@ -14,6 +15,11 @@ export class DocRepositoryProcessor
   implements ApicuronProcessor<DocRepositoryProcessorInput>
 {
   private readonly articleParser = new ArticleParser()
+  private readonly contribuotrsFileProvider = new ContributorsFileProvider(
+    '_data/CONTRIBUTORS.yaml'
+  )
+
+  constructor() {}
 
   get repoRoot(): string {
     return process.env.GITHUB_WORKSPACE ?? process.cwd()
@@ -35,8 +41,10 @@ export class DocRepositoryProcessor
   async processAll(
     input: DocRepositoryProcessorInput
   ): Promise<Report[] | Promise<Report[]>> {
+    Logger.info('Building contributors map from contributors file...')
+    await this.contribuotrsFileProvider.build()
     Logger.info(
-      `Starting to process all articles in repository at: ${this.repoRoot}`
+      `Processing all articles in repository at: ${this.repoRoot}`
     )
     const errors: { file: string; error: any }[] = []
 
@@ -80,17 +88,15 @@ export class DocRepositoryProcessor
           )
         }
       }
-
-      Logger.info(`--- Finished processing file: ${filePath} ---\n\n`)
     }
 
     Logger.warning(
-      `Finished processing all articles with ${errors.length} errors. **These articles were not be credited:**`
+      `Finished processing all articles with ${errors.length} errors: `
     )
     errors.forEach((err) => {
       Logger.error(`\tError in file [${err.file}] => ${err.error}`)
     })
-    Logger.info(
+    Logger.warning(
       `If you wish to credit contributors to these pages, please address the errors and re-run the workflow.`
     )
 
