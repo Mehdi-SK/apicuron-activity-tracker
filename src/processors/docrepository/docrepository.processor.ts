@@ -30,13 +30,15 @@ export class DocRepositoryProcessor
     await this.contribuotrsFileProvider.build()
     Logger.info(`Processing all articles in repository at: ${this.repoRoot}`)
 
-    await this.processArticles()
+    await this.extractContributorsFromArticles()
 
     return []
   }
 
-  private async processArticles() {
+  private async extractContributorsFromArticles() {
     const errors: { file: string; error: unknown }[] = []
+    const contributions: Array<{ filePath: string; contributors: string[] }> =
+      []
     for await (const { filePath, defaults } of ArticleIterator({
       basePath: `${this.repoRoot}`
     })) {
@@ -49,37 +51,46 @@ export class DocRepositoryProcessor
       )
       const parsed = this.articleParser.parse(rawFileContent, defaults)
 
+      // Parsing Error
       if (!parsed.success) {
         errors.push({ file: filePath, error: parsed.error })
         continue
+      }
+
+      // No Contributors Found
+      const { frontMatter } = parsed.data
+
+      if (
+        !frontMatter.contributors ||
+        (frontMatter.contributors.length === 0 &&
+          defaults?.contributors?.length === 0)
+      ) {
+        errors.push({
+          file: filePath,
+          error: 'No contributors found in file front matter or defaults.'
+        })
+        continue
+      }
+      // Contributors Found in front matter
+      if (frontMatter.contributors && frontMatter.contributors.length > 0) {
+        contributions.push({
+          filePath,
+          contributors: Array.isArray(frontMatter.contributors)
+            ? frontMatter.contributors
+            : [frontMatter.contributors]
+        })
       } else {
-        const { frontMatter } = parsed.data
-        if (
-          !frontMatter['contributors'] ||
-          (frontMatter['contributors'].length === 0 &&
-            defaults?.contributors?.length === 0)
-        ) {
-          errors.push({
-            file: filePath,
-            error: 'No contributors found in file front matter or defaults.'
-          })
-          continue
-        } else if (
-          frontMatter['contributors'] &&
-          frontMatter['contributors'].length > 0
-        ) {
-          Logger.info(
-            `Contributors found for file ${filePath}: ${JSON.stringify(frontMatter['contributors'])}`
-          )
-          return frontMatter['contributors'] as string[]
-        } else {
-          Logger.info(
-            `No contributors found for file ${filePath}, using defaults: ${JSON.stringify(defaults?.contributors)}`
-          )
-        }
-        Logger.logProcessingErrors(errors)
+        contributions.push({
+          filePath,
+          contributors: Array.isArray(defaults.contributors)
+            ? defaults.contributors!
+            : [defaults.contributors!]
+        })
       }
     }
+    Logger.logProcessingErrors(errors)
+
+    return contributions
   }
 
   async buildReportsForArticle(): Promise<Report[] | null> {
