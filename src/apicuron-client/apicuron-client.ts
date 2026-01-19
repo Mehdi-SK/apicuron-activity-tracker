@@ -1,6 +1,6 @@
 // ...existing code...
 
-import { Logger } from '../logger.js'
+import { SLogger } from '../logger.js'
 import { ApicuronConfig } from '../types/input.types.js'
 import { Report } from '../types/report.schema.js'
 
@@ -19,7 +19,7 @@ export class APICURONClient {
 
   async sendReports(reports: Report[]): Promise<void> {
     try {
-      Logger.info(`Sending ${reports.length} reports to ${this.endpoint}`)
+      SLogger.info(`Sending ${reports.length} reports to ${this.endpoint}`)
 
       const requestBody = { reports }
 
@@ -40,19 +40,19 @@ export class APICURONClient {
         : await response.text()
 
       if (!response.ok) {
-        Logger.error(`API Error: ${response.status} ${response.statusText}`)
-        Logger.error(`Response body: ${JSON.stringify(responseBody)}`)
+        SLogger.error(`API Error: ${response.status} ${response.statusText}`)
+        SLogger.error(`Response body: ${JSON.stringify(responseBody)}`)
         throw new Error(
           `API request failed: ${response.status} ${response.statusText}`
         )
       }
 
-      Logger.info(`Successfully sent ${reports.length} reports`)
-      Logger.debug(`API Response: ${JSON.stringify(responseBody)}`)
+      SLogger.info(`Successfully sent ${reports.length} reports`)
+      SLogger.debug(`API Response: ${JSON.stringify(responseBody)}`)
     } catch (error) {
-      Logger.error('Failed to send reports')
+      SLogger.error('Failed to send reports')
       if (error instanceof Error) {
-        Logger.error(error.stack || error.message)
+        SLogger.error(error.stack || error.message)
       }
       throw error
     }

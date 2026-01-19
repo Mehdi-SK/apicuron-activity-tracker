@@ -4,7 +4,7 @@ import * as core from '@actions/core'
 import YAML from 'yaml'
 import { Glob } from 'glob'
 import { minimatch } from 'minimatch'
-import { Logger } from '../../logger.js'
+import { SLogger } from '../../logger.js'
 export type IteratorConfig = {
   basePath: string
 }
@@ -57,7 +57,7 @@ export class JekyllDefaultConfigBuilder {
   }
 
   loadExcludes(): this {
-    Logger.info(
+    SLogger.info(
       `Loading excludes from Jekyll config: ${JSON.stringify(this.data.exclude)}`
     )
     if (!!this.data.exclude && Array.isArray(this.data.exclude)) {
@@ -65,7 +65,7 @@ export class JekyllDefaultConfigBuilder {
         (entry) => typeof entry === 'string'
       )
       if (this.excludedPaths.length < this.data.exclude.length) {
-        Logger.warning('Found non-string values in exclude array on Config')
+        SLogger.warning('Found non-string values in exclude array on Config')
       }
     }
     return this

@@ -1,11 +1,11 @@
 import { readFileSync } from 'fs'
 import { Logger } from '../../logger.js'
+import { ContributorsFileProvider } from '../../orcid/orcid-providers/contributors-file.provider.js'
 import { GithubPayload } from '../../types/github.types.js'
 import { Report } from '../../types/report.schema.js'
 import { ApicuronProcessor } from '../processor.interface.js'
 import { ArticleIterator } from './article-iterator.js'
 import { ArticleParser } from './article-parser.js'
-import { ContributorsFileProvider } from '../../orcid/orcid-providers/contributors-file.provider.js'
 
 type DocRepositoryProcessorInput = {
   githubPayload: GithubPayload
@@ -18,15 +18,16 @@ export class DocRepositoryProcessor
   private readonly contribuotrsFileProvider = new ContributorsFileProvider(
     '_data/CONTRIBUTORS.yaml'
   )
+  private logger = new Logger('DocRepositoryProcessor')
 
   get repoRoot(): string {
     return process.env.GITHUB_WORKSPACE ?? process.cwd()
   }
 
   async process(input: DocRepositoryProcessorInput): Promise<Report[]> {
-    Logger.info('Building contributors map from contributors file...')
+    this.logger.info('Building contributors map from contributors file...')
 
-    Logger.info(`Processing all articles in repository at: ${this.repoRoot}`)
+    this.logger.info(`Processing all articles in repository at: ${this.repoRoot}`)
 
     await this.extractContributorsFromArticles()
 
@@ -40,7 +41,7 @@ export class DocRepositoryProcessor
     for await (const { filePath, defaults } of ArticleIterator({
       basePath: `${this.repoRoot}`
     })) {
-      Logger.info(
+      this.logger.info(
         `Processing file: ${filePath} with defaults: ${JSON.stringify(defaults)}`
       )
       const rawFileContent = readFileSync(
@@ -86,13 +87,14 @@ export class DocRepositoryProcessor
         })
       }
     }
-    Logger.logProcessingErrors(errors)
+    this.logger.logProcessingErrors(errors)
 
     return contributions
   }
 
   async mapNamesToOrcids(contributors: string[]): Promise<Array<string>> {
-    return contributors.map(this.contribuotrsFileProvider.getOrcidByName)
+    return contributors
+      .map(this.contribuotrsFileProvider.getOrcidByName)
   }
 
   async buildReportsForArticle(): Promise<Report[] | null> {
