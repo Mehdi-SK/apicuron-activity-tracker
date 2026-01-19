@@ -19,15 +19,13 @@ export class DocRepositoryProcessor
     '_data/CONTRIBUTORS.yaml'
   )
 
-  constructor() {}
-
   get repoRoot(): string {
     return process.env.GITHUB_WORKSPACE ?? process.cwd()
   }
 
   async process(input: DocRepositoryProcessorInput): Promise<Report[]> {
     Logger.info('Building contributors map from contributors file...')
-    await this.contribuotrsFileProvider.build()
+
     Logger.info(`Processing all articles in repository at: ${this.repoRoot}`)
 
     await this.extractContributorsFromArticles()
@@ -91,6 +89,10 @@ export class DocRepositoryProcessor
     Logger.logProcessingErrors(errors)
 
     return contributions
+  }
+
+  async mapNamesToOrcids(contributors: string[]): Promise<Array<string>> {
+    return contributors.map(this.contribuotrsFileProvider.getOrcidByName)
   }
 
   async buildReportsForArticle(): Promise<Report[] | null> {
