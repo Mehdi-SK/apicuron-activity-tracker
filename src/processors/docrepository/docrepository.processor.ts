@@ -27,7 +27,9 @@ export class DocRepositoryProcessor
   async process(input: DocRepositoryProcessorInput): Promise<Report[]> {
     this.logger.info('Building contributors map from contributors file...')
 
-    this.logger.info(`Processing all articles in repository at: ${this.repoRoot}`)
+    this.logger.info(
+      `Processing all articles in repository at: ${this.repoRoot}`
+    )
 
     await this.extractContributorsFromArticles()
 
@@ -92,10 +94,21 @@ export class DocRepositoryProcessor
     return contributions
   }
 
-  async mapNamesToOrcids(contributors: string[]): Promise<Array<string>> {
-    return contributors
-      .map(this.contribuotrsFileProvider.getOrcidByName)
+  mapNamesToOrcids(contributors: string[]) {
+    const orcids: string[] = []
+    const missingOrcids: string[] = []
+
+    for (const name of contributors) {
+      try {
+        const orcid = this.contribuotrsFileProvider.getOrcidByName(name)
+        orcids.push(orcid)
+      } catch (error) {
+        missingOrcids.push(name)
+      }
+    }
+    return { orcids, missingOrcids }
   }
+
 
   async buildReportsForArticle(): Promise<Report[] | null> {
     return [
