@@ -1,14 +1,15 @@
 import { readFileSync } from 'fs'
 import { Logger } from '../../logger.js'
 import { ContributorsFileProvider } from '../../orcid/orcid-providers/contributors-file.provider.js'
-import { GithubPayload } from '../../types/github.types.js'
+import { GithubContext } from '../../types/github.types.js'
 import { Report } from '../../types/report.schema.js'
 import { ApicuronProcessor } from '../processor.interface.js'
 import { ArticleIterator } from './article-iterator.js'
 import { ArticleParser } from './article-parser.js'
 
 type DocRepositoryProcessorInput = {
-  githubPayload: GithubPayload
+  actionContext: GithubContext
+  apicuronResourceId: string
 }
 
 export class DocRepositoryProcessor
