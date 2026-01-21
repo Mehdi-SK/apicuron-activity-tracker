@@ -21,18 +21,52 @@ export class DocRepositoryProcessor
   )
   private logger = new Logger('DocRepositoryProcessor')
 
+  private repoUrl!: string
+  private commitSha!: string
+  private apicuronResourceId!: string
+
   get repoRoot(): string {
     return process.env.GITHUB_WORKSPACE ?? process.cwd()
   }
 
   async process(input: DocRepositoryProcessorInput): Promise<Report[]> {
+    const { repo, owner } =
+      input.actionContext.repo ||
+      (() => {
+        throw new Error('Repository URL not found in payload')
+      })()
+
+    this.repoUrl = `https://github.com/${owner}/${repo}`
+    this.commitSha =
+      input.actionContext.sha ||
+      (() => {
+        throw new Error('Commit SHA not found in payload')
+      })()
+
+    this.apicuronResourceId = input.apicuronResourceId
     this.logger.info('Building contributors map from contributors file...')
 
     this.logger.info(
       `Processing all articles in repository at: ${this.repoRoot}`
     )
 
-    await this.extractContributorsFromArticles()
+    const contributions = await this.extractContributorsFromArticles()
+    if (contributions.length > 0) {
+      const allReports: Report[] = []
+      for (const { filePath, contributors } of contributions) {
+        const { reports, missingOrcids } = this.processOneArticle({
+          filepath: filePath,
+          contributions: contributors
+        })
+        allReports.push(...reports)
+        if (missingOrcids.length > 0) {
+          this.logger.warning(
+            `Missing ORCIDs for contributors: ${missingOrcids.join(', ')} in file: ${filePath}`
+          )
+        }
+      }
+      return allReports
+    }
 
     return []
   }
