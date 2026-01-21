@@ -144,6 +144,28 @@ export class DocRepositoryProcessor
     return { orcids, missingOrcids }
   }
 
+  processOneArticle({
+    filepath,
+    contributions
+  }: {
+    filepath: string
+    contributions: string[]
+  }) {
+    const { orcids, missingOrcids } = this.mapNamesToOrcids(contributions)
+
+    const entity_uri = `${this.repoUrl}/blob/${this.commitSha}/${filepath}`
+
+    const reports = orcids.map((orcid) => ({
+      activity_term: 'contribution',
+      curator_orcid: orcid,
+      entity_uri: entity_uri,
+      league: 'default',
+      resource_id: this.apicuronResourceId,
+      timestamp: new Date().toISOString()
+    }))
+
+    return { reports, missingOrcids }
+  }
 
   async buildReportsForArticle(): Promise<Report[] | null> {
     return [
