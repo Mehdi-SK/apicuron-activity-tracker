@@ -1,13 +1,13 @@
 // ...existing code...
 
-import { SLogger } from '../logger.js'
+import { Logger, SLogger } from '../logger.js'
 import { ApicuronConfig } from '../types/input.types.js'
 import { Report } from '../types/report.schema.js'
 
 export class APICURONClient {
   private endpoint: string
   private token: string
-
+  private logger = new Logger('APICURONClient')
   constructor(config: ApicuronConfig) {
     const endpoints = {
       prod: 'https://apicuron.org/api/reports',
@@ -18,6 +18,16 @@ export class APICURONClient {
   }
 
   async sendReports(reports: Report[]): Promise<void> {
+
+     if (reports.length === 0) {
+          this.logger.info('No valid commits to process')
+          return
+        }
+        this.logger.info(`Generated ${reports.length} reports`)
+        console.log(JSON.stringify(reports, null, 2))
+    
+
+
     try {
       SLogger.info(`Sending ${reports.length} reports to ${this.endpoint}`)
 

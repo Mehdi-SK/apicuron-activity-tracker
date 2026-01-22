@@ -8,9 +8,11 @@ import { DocRepositoryProcessor } from './processors/docrepository/docrepository
 import { ExecutionMode } from './types/input.types.js'
 import { Report } from './types/report.schema.js'
 import { loadActionInputs } from './utils/loadActionInputs.js'
+import { Logger } from './logger.js'
 
 export async function run(): Promise<void> {
   try {
+    const logger = new Logger('Main')
     const inputs = loadActionInputs()
 
     // setup orcid provider service
@@ -19,11 +21,10 @@ export async function run(): Promise<void> {
     // setup processor
     const githubPayload = github.context.payload
 
-    if(!githubPayload.commits || githubPayload.commits.length === 0) {
-      core.info('No commits found in the GitHub payload. Exiting.')
+    if (!githubPayload.commits || githubPayload.commits.length === 0) {
+      logger.info('No commits found in the GitHub payload. Exiting.')
       return
     }
-
 
     let reports: Array<Report> = []
     if (inputs.mode === ExecutionMode.commits) {
@@ -40,17 +41,13 @@ export async function run(): Promise<void> {
       })
     }
 
-    if (reports.length === 0) {
-      core.info('No valid commits to process')
-      return
-    }
-    core.info(`Generated ${reports.length} reports`)
-    core.info(`sending reports to APICURON: ${inputs.apicuron.environment}`)
-    console.log(JSON.stringify(reports, null, 2))
-
+    
+    logger.info(`sending reports to APICURON: ${inputs.apicuron.environment}`)
     const apicuronClient = new APICURONClient(inputs.apicuron)
     await apicuronClient.sendReports(reports)
     core.setOutput('reports sent:', JSON.stringify(reports))
+
+    
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
   }
