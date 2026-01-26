@@ -1,0 +1,1 @@
+act push --workflows ".github/workflows/apicuron-tracker.yaml" --secret-file "/home/mehdi/projects/rdmkit/local/.secrets" --var-file "" --input-file "" --eventpath "/home/mehdi/projects/rdmkit/local/payload.json" --use-gitignore="false" --local-repository "Mehdi-SK/apicuron-activity-tracker@main=../apicuron-repo-tracker/
