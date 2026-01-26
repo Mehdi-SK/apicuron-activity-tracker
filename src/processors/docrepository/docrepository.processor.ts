@@ -156,7 +156,7 @@ export class DocRepositoryProcessor
     const entity_uri = `${this.repoUrl}/blob/${this.commitSha}/${filepath}`
 
     const reports = orcids.map((orcid) => ({
-      activity_term: 'contribution',
+      activity_term: 'article_contribution',
       curator_orcid: orcid,
       entity_uri: entity_uri,
       league: 'default',
@@ -167,16 +167,5 @@ export class DocRepositoryProcessor
     return { reports, missingOrcids }
   }
 
-  async buildReportsForArticle(): Promise<Report[] | null> {
-    return [
-      {
-        activity_term: 'get from input',
-        curator_orcid: '',
-        entity_uri: 'article_uri',
-        league: 'get from input',
-        resource_id: 'get from input',
-        timestamp: 'get from commit'
-      }
-    ]
-  }
+  
 }
