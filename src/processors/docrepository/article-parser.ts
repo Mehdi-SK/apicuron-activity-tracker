@@ -1,5 +1,5 @@
 import matter from 'gray-matter'
-import { SLogger } from '../../logger.js'
+import { Logger } from '../../logger.js'
 import { Result } from '../../types/result.type.js'
 import { DefaultsConfig } from './article-iterator.js'
 
@@ -10,6 +10,7 @@ export type ArticleMetadata = {
 }
 
 export class ArticleParser {
+  private logger = new Logger('ArticleParser')
   constructor() {}
 
   /**
@@ -34,7 +35,7 @@ export class ArticleParser {
         }
       }
     } catch (error) {
-      SLogger.error(`Error parsing article: ${error}`)
+      this.logger.error(`Error parsing article: ${error}`)
       return {
         success: false,
         error: error instanceof Error ? error : new Error(String(error))

@@ -1,6 +1,6 @@
 // ...existing code...
 
-import { Logger, SLogger } from '../logger.js'
+import { Logger } from '../logger.js'
 import { ApicuronConfig } from '../types/input.types.js'
 import { Report } from '../types/report.schema.js'
 
@@ -18,20 +18,17 @@ export class APICURONClient {
   }
 
   async sendReports(reports: Report[]): Promise<void> {
-
-     if (reports.length === 0) {
-          this.logger.info('No valid commits to process')
-          return
-        }
-        this.logger.info(`Generated ${reports.length} reports`)
-        console.log(JSON.stringify(reports, null, 2))
-    
-
+    if (reports.length === 0) {
+      this.logger.info('No valid commits to process')
+      return
+    }
+    this.logger.info(`Generated ${reports.length} reports`)
 
     try {
-      SLogger.info(`Sending ${reports.length} reports to ${this.endpoint}`)
+      this.logger.info(`Sending ${reports.length} reports to ${this.endpoint}`)
 
       const requestBody = { reports }
+      this.logger.info(`Request Body: ${requestBody.reports.length}`)
 
       const response = await fetch(this.endpoint, {
         method: 'POST',
@@ -50,19 +47,21 @@ export class APICURONClient {
         : await response.text()
 
       if (!response.ok) {
-        SLogger.error(`API Error: ${response.status} ${response.statusText}`)
-        SLogger.error(`Response body: ${JSON.stringify(responseBody)}`)
+        this.logger.error(
+          `API Error: ${response.status} ${response.statusText}`
+        )
+        this.logger.error(`Response body: ${JSON.stringify(responseBody)}`)
         throw new Error(
           `API request failed: ${response.status} ${response.statusText}`
         )
       }
 
-      SLogger.info(`Successfully sent ${reports.length} reports`)
-      SLogger.debug(`API Response: ${JSON.stringify(responseBody)}`)
+      this.logger.info(`Successfully sent ${reports.length} reports`)
+      this.logger.debug(`API Response: ${JSON.stringify(responseBody)}`)
     } catch (error) {
-      SLogger.error('Failed to send reports')
+      this.logger.error('Failed to send reports')
       if (error instanceof Error) {
-        SLogger.error(error.stack || error.message)
+        this.logger.error(error.stack || error.message)
       }
       throw error
     }

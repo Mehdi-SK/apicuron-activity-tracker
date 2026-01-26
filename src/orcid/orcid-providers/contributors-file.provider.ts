@@ -1,12 +1,14 @@
 import { readFileSync } from 'fs'
 import * as yaml from 'yaml'
-import { SLogger } from '../../logger.js'
+import { Logger } from '../../logger.js'
 
 export class ContributorsFileProvider {
   constructor(private filePath: string) {
     this.filePath = filePath
     this.build()
   }
+
+  private logger = new Logger('ContributorsFileProvider')
 
   // Full name: Orcid
   public contributorsMap: Map<string, string> = new Map()
@@ -21,13 +23,13 @@ export class ContributorsFileProvider {
         if (details.orcid) {
           this.contributorsMap.set(name, details.orcid)
         } else {
-          SLogger.warning(
+          this.logger.warning(
             `ORCID not found for '${name}' in contributors file. They will not be credited unless you add their ORCID.`
           )
         }
       }
     } catch (error) {
-      SLogger.error(
+      this.logger.error(
         `Failed to read or parse contributors file at ${this.filePath}: ${error instanceof Error ? error.message : 'Unknown error'}`
       )
     }
