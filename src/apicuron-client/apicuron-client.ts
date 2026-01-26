@@ -22,14 +22,13 @@ export class APICURONClient {
       this.logger.info('No valid commits to process')
       return
     }
-    this.logger.info(`Generated ${reports.length} reports`)
 
     try {
       this.logger.info(`Sending ${reports.length} reports to ${this.endpoint}`)
 
       const requestBody = { reports }
-      this.logger.info(`Request Body: ${requestBody.reports.length}`)
-
+      // In your frontend code before sending
+      await this.measurePayloadSize(reports)
       const response = await fetch(this.endpoint, {
         method: 'POST',
         headers: {
@@ -65,5 +64,21 @@ export class APICURONClient {
       }
       throw error
     }
+  }
+
+  async bulkSendJsonReports(reports: Report[]): Promise<void> {}
+
+  private async measurePayloadSize(reports: Report[]): Promise<number> {
+    const payload = { reports: [...reports] } // your 415 reports
+    const payloadString = JSON.stringify(payload)
+    const sizeInBytes = new Blob([payloadString]).size
+    const sizeInKB = sizeInBytes / 1024
+    const sizeInMB = sizeInKB / 1024
+
+    this.logger.info(
+      `Payload size: ${sizeInBytes} bytes (${sizeInKB.toFixed(2)} KB, ${sizeInMB.toFixed(2)} MB)`
+    )
+
+    return sizeInKB
   }
 }
