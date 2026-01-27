@@ -34,6 +34,7 @@ export async function run(): Promise<void> {
         apicuronResourceId: inputs.apicuron.resource_id
       })
     } else if (inputs.mode === ExecutionMode.ett) {
+      logger.info('Processing ETT documents...')
       const ettProcessor = new DocRepositoryProcessor()
       reports = await ettProcessor.process({
         actionContext: github.context,
