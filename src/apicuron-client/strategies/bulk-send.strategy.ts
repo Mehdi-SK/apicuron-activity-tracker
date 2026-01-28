@@ -8,11 +8,12 @@ export class BulkSendStrategy extends SendStrategy{
         super(context);
         this.endpoint = EndpointMap[context.environment] + "reports/bulk";
     }
-    async sendReports(reports: Report[]): Promise<Response> {
+    async sendReports(reports: Report[], resource_id: string): Promise<Response> {
         const fileContent = JSON.stringify({ reports }, null, 2)
         const file = new Blob([fileContent], { type: "application/json" })
         const formData = new FormData()
         formData.append("reports", file, "reports.json")
+        formData.append("delete_all", [resource_id])
 
         const response = await fetch(this.endpoint, {
             method: "POST",

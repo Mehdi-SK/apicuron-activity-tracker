@@ -1,6 +1,6 @@
 import { Logger } from '../../logger.js'
 import { Report } from '../../types/report.schema.js'
-import { EndpointMap, Environment } from '../const.js'
+import { Environment } from '../const.js'
 
 export interface SendContext {
     environment: Environment
@@ -10,8 +10,8 @@ export interface SendContext {
 export abstract class SendStrategy<TContext extends SendContext = SendContext> {
     protected token: string
     protected readonly logger = new Logger('SendStrategy')
-    constructor(context: TContext) {
+    constructor(context: TContext, ) {
         this.token = context.apiToken
     }
-    abstract sendReports(reports: Report[]): Promise<Response>
+    abstract sendReports(reports: Report[], resource_id: string): Promise<Response>
 }

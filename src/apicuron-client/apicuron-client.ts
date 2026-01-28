@@ -11,9 +11,12 @@ export class APICURONClient {
     private environment: Environment
     private token: string
     private logger = new Logger('APICURONClient')
+
+    private config: ApicuronConfig
     constructor(config: ApicuronConfig) {
         this.environment = config.environment
         this.token = config.apicuron_token
+        this.config = config
     }
 
     async sendReports(reports: Report[]): Promise<void> {
@@ -27,7 +30,7 @@ export class APICURONClient {
             this.logger.info(
                 `Sending ${reports.length} reports to ${this.environment}`
             )
-            strategy.sendReports(reports)
+            strategy.sendReports(reports, this.config.resource_id)
             this.logger.info(`Successfully sent ${reports.length} reports`)
         } catch (error) {
             this.logger.error('Failed to send reports')

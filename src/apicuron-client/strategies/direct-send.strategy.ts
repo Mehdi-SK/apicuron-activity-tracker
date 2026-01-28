@@ -8,8 +8,8 @@ export class DirectSendStrategy extends SendStrategy {
         super(context)
         this.apiUrl = EndpointMap[context.environment] + 'reports'
     }
-    async sendReports(reports: Report[]): Promise<Response> {
-        const requestBody = { reports }
+    async sendReports(reports: Report[], resource_id: string): Promise<Response> {
+        const requestBody = { reports, delete_all: [resource_id] }
         const response = await fetch(this.apiUrl, {
             method: 'POST',
             headers: {
