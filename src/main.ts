@@ -11,45 +11,47 @@ import { loadActionInputs } from './utils/loadActionInputs.js'
 import { Logger } from './logger.js'
 
 export async function run(): Promise<void> {
-  try {
-    const logger = new Logger('Main')
-    const inputs = loadActionInputs()
+    try {
+        const logger = new Logger('Main')
+        const inputs = loadActionInputs()
 
-    // setup orcid provider service
-    const orcidProvider = new RemoteHandler(inputs.orcid_lookup_service)
+        // setup orcid provider service
+        const orcidProvider = new RemoteHandler(inputs.orcid_lookup_service)
 
-    // setup processor
-    const githubPayload = github.context.payload
+        // setup processor
+        const githubPayload = github.context.payload
 
-    if (!githubPayload.commits || githubPayload.commits.length === 0) {
-      logger.info('No commits found in the GitHub payload. Exiting.')
-      return
+        if (!githubPayload.commits || githubPayload.commits.length === 0) {
+            logger.info('No commits found in the GitHub payload. Exiting.')
+            return
+        }
+
+        let reports: Array<Report> = []
+        if (inputs.mode === ExecutionMode.commits) {
+            const commitProcessor = new CommitProcessor(orcidProvider)
+            reports = await commitProcessor.process({
+                githubPayload,
+                apicuronResourceId: inputs.apicuron.resource_id
+            })
+        } else if (inputs.mode === ExecutionMode.ett) {
+            logger.info('Processing ETT documents...')
+            const ettProcessor = new DocRepositoryProcessor()
+            reports = await ettProcessor.process({
+                actionContext: github.context,
+                apicuronResourceId: inputs.apicuron.resource_id
+            })
+        }
+
+        logger.info(
+            `sending reports to APICURON: ${inputs.apicuron.environment}`
+        )
+        const apicuronClient = new APICURONClient(inputs.apicuron)
+        await apicuronClient.sendReports(reports)
+        const output = reports.map((r) => r.curator_orcid).join(', ')
+        logger.info(`reports sent for curators: ${output}`)
+        // core.setOutput(`${reports.length} reports sent for curators`, output)
+        core.setOutput('reports sent:', JSON.stringify(reports))
+    } catch (error) {
+        if (error instanceof Error) core.setFailed(error.message)
     }
-
-    let reports: Array<Report> = []
-    if (inputs.mode === ExecutionMode.commits) {
-      const commitProcessor = new CommitProcessor(orcidProvider)
-      reports = await commitProcessor.process({
-        githubPayload,
-        apicuronResourceId: inputs.apicuron.resource_id
-      })
-    } else if (inputs.mode === ExecutionMode.ett) {
-      logger.info('Processing ETT documents...')
-      const ettProcessor = new DocRepositoryProcessor()
-      reports = await ettProcessor.process({
-        actionContext: github.context,
-        apicuronResourceId: inputs.apicuron.resource_id
-      })
-    }
-
-    
-    logger.info(`sending reports to APICURON: ${inputs.apicuron.environment}`)
-    const apicuronClient = new APICURONClient(inputs.apicuron)
-    await apicuronClient.sendReports(reports)
-    core.setOutput('reports sent:', JSON.stringify(reports))
-
-    
-  } catch (error) {
-    if (error instanceof Error) core.setFailed(error.message)
-  }
 }
